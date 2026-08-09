@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dhaka-energy-api:local
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

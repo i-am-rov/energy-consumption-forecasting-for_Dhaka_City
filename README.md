@@ -79,6 +79,14 @@ docker build -t dhaka-energy-api .
 docker run --rm -p 8000:8000 dhaka-energy-api
 ```
 
+Or start the same service with Docker Compose:
+
+```powershell
+docker compose up --build
+```
+
+Stop and remove the Compose container with `docker compose down`.
+
 The container runs `app.api.main:app` as an unprivileged user. Keep `app`, `data`, and `models` at the project root because their paths are resolved relative to the source package.
 
 ## Testing
