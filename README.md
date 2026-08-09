@@ -1,44 +1,95 @@
-# Dhaka City Energy Consumption Forecasting
+# Dhaka City Energy Consumption Forecasting API
 
-This folder contains only the files required to run and containerize the
-forecasting API.
+A production-ready FastAPI application for forecasting Dhaka City's daily electricity demand. The service combines historical demand, temperature, calendar, holiday, lag, and rolling-demand features with 11 trained regression models.
 
-## Folder structure
+## Features
+
+- One-day and recursive seven-day electricity-demand forecasts
+- Stable selection between 11 trained models, or all models at once
+- Manual temperatures or automatic Dhaka weather from Open-Meteo
+- Strict request validation with frontend-friendly error responses
+- Browser dashboard, Swagger UI, ReDoc, and health monitoring
+- Containerized deployment with a non-root runtime user
+
+## Project layout
 
 ```text
-energy-consumption-forecasting-for_Dhaka_City/
-|-- app/                         FastAPI application package
-|   |-- api/                     Routes, validation, forecasting, and weather logic
-|   `-- api/static/              Browser interface assets
-|-- data/
-|   |-- historical/              Feature-engineered demand history
-|   `-- forecast_history/        Persisted recursive predictions used for lag features
-|-- models/
-|   |-- artifacts/               Eleven trained model files
-|   `-- model_manifest.json      Model feature and categorical-column schema
-|-- .dockerignore                Excludes caches and local development files
-|-- requirements.txt             Python runtime dependencies
-`-- README.md                    Structure and startup instructions
+app/                         FastAPI application package
+  api/                       Routes, validation, forecasting, and weather logic
+  api/static/                Browser interface assets
+data/
+  historical/                Feature-engineered demand history
+  forecast_history/          Persisted predictions used for recursive lag features
+models/
+  artifacts/                 Eleven trained model files
+  model_manifest.json        Feature and categorical-column schema
+Dockerfile                   Production container image
+requirements.txt             Runtime dependencies
 ```
 
 ## Run locally
 
-From this folder:
+Create and activate a virtual environment, then install the dependencies:
 
 ```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+```
+
+Start the API from the project root:
+
+```powershell
 python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000
 ```
 
-Then open `http://127.0.0.1:8000/`.
+Open:
 
-## Docker entry point
+- Forecast dashboard: <http://127.0.0.1:8000/>
+- Swagger UI: <http://127.0.0.1:8000/docs>
+- ReDoc: <http://127.0.0.1:8000/redoc>
+- Health check: <http://127.0.0.1:8000/health>
 
-Use this application target in the container command:
+## API endpoints
 
-```text
-app.api.main:app
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/metadata` | Valid dates, constraints, holidays, and models |
+| `GET` | `/api/v1/models` | Stable model-number catalog |
+| `GET` | `/api/v1/weather/7-day` | Seven Dhaka daily mean temperatures |
+| `POST` | `/api/v1/forecast` | Backward-compatible one-day forecast |
+| `POST` | `/api/v1/forecast/7-day` | Recursive seven-day forecast |
+| `GET` | `/health` | Service and model-artifact health |
+
+Forecast dates advance with the Asia/Dhaka calendar. Call `/api/v1/metadata` before creating requests instead of hard-coding dates or temperature limits.
+
+## Models
+
+The service exposes Linear Regression, Ridge, Lasso, K-Nearest Neighbors, Random Forest, Extra Trees, CatBoost, Gradient Boosting, SVR with an RBF kernel, MLP Regressor, and Voting Regressor.
+
+Model numbers are stable public identifiers. Their artifact mapping is defined in `app/api/model_registry.py`.
+
+## Docker
+
+Build and run the image:
+
+```powershell
+docker build -t dhaka-energy-api .
+docker run --rm -p 8000:8000 dhaka-energy-api
 ```
 
-The application expects `app`, `data`, and `models` to remain at the project
-root because their locations are resolved relative to the Python source files.
+The container runs `app.api.main:app` as an unprivileged user. Keep `app`, `data`, and `models` at the project root because their paths are resolved relative to the source package.
+
+## Testing
+
+Install the development dependencies and run the test suite:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m pytest
+```
+
+## Responsible use
+
+Forecasts are decision-support estimates, not guarantees. Operational decisions should also consider current grid conditions, data drift, unusual weather, infrastructure changes, and expert review.
