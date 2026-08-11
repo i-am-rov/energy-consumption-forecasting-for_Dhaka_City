@@ -107,3 +107,5 @@ Forecasts are decision-support estimates, not guarantees. Operational decisions 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, quality requirements, and the pull request checklist.
+
+Security issues should be reported privately according to [SECURITY.md](SECURITY.md).
