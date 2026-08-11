@@ -95,8 +95,10 @@ Install the development dependencies and run the test suite:
 
 ```powershell
 python -m pip install -r requirements-dev.txt
-python -m pytest
+python scripts/verify.py
 ```
+
+The verification command checks lint rules, formatting, the complete test suite, and the minimum coverage threshold.
 
 ## Responsible use
 
