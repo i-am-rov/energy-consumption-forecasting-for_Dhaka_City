@@ -14,3 +14,11 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
