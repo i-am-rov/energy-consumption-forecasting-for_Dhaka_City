@@ -3,23 +3,19 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
 
 from .catalog import FEATURE_DATA_PATH
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MODEL_MANIFEST_PATH = PROJECT_ROOT / "models" / "model_manifest.json"
 RECURSIVE_HISTORY_PATH = (
-    PROJECT_ROOT
-    / "data"
-    / "forecast_history"
-    / "recursive_forecast_history.csv"
+    PROJECT_ROOT / "data" / "forecast_history" / "recursive_forecast_history.csv"
 )
 TARGET_COLUMN = "Demand (MW)"
 DATE_COLUMN = "Date"
@@ -110,7 +106,9 @@ class FeatureRepository:
                 raw_columns,
             ].copy()
             if recursive[[TARGET_COLUMN, self.temperature_column]].isna().any().any():
-                raise RuntimeError("Recursive history contains missing demand or temperature values.")
+                raise RuntimeError(
+                    "Recursive history contains missing demand or temperature values."
+                )
             if not recursive.empty:
                 expected_start = self.latest_known_demand_date + timedelta(days=1)
                 if recursive.iloc[0][DATE_COLUMN].date() != expected_start:
@@ -156,10 +154,9 @@ class FeatureRepository:
         required_start = expected_start or self.allowed_forecast_date
         if normalized[0] != required_start:
             raise FeatureValidationError(
-                "The first forecast date must be exactly "
-                f"{required_start.isoformat()}."
+                f"The first forecast date must be exactly {required_start.isoformat()}."
             )
-        for previous, current in zip(normalized, normalized[1:]):
+        for previous, current in zip(normalized, normalized[1:], strict=False):
             if current != previous + timedelta(days=1):
                 raise FeatureValidationError("Forecast dates must be consecutive without gaps.")
         return normalized
@@ -322,11 +319,11 @@ class FeatureRepository:
             ).std()
         frame["Demand_Rolling_Min_7"] = past_demand.rolling(7, min_periods=7).min()
         frame["Demand_Rolling_Max_7"] = past_demand.rolling(7, min_periods=7).max()
-        frame["Demand_EWM_7"] = past_demand.ewm(span=7, adjust=False).mean().where(
-            past_demand.notna()
+        frame["Demand_EWM_7"] = (
+            past_demand.ewm(span=7, adjust=False).mean().where(past_demand.notna())
         )
-        frame["Demand_EWM_28"] = past_demand.ewm(span=28, adjust=False).mean().where(
-            past_demand.notna()
+        frame["Demand_EWM_28"] = (
+            past_demand.ewm(span=28, adjust=False).mean().where(past_demand.notna())
         )
         frame["Demand_Change_1"] = frame["Demand_Lag_1"] - frame["Demand_Lag_2"]
         frame["Demand_Change_7"] = frame["Demand_Lag_1"] - frame["Demand_Lag_7"]

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
 import re
+from datetime import date, datetime, timedelta
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -17,13 +17,11 @@ from pydantic import (
 )
 
 from .catalog import (
-    HolidayName,
     TEMPERATURE_MAX_C,
     TEMPERATURE_MIN_C,
-    TEMPERATURE_STEP_C,
+    HolidayName,
 )
 from .model_registry import ModelId
-
 
 MODEL_ID_MIN = min(int(model_id) for model_id in ModelId)
 MODEL_ID_MAX = max(int(model_id) for model_id in ModelId)
@@ -74,7 +72,8 @@ class ForecastRequest(BaseModel):
     daily_temperature_c: TemperatureC | None = Field(
         default=None,
         description=(
-            "Required when collect_temperature_from_api is false; omit it when weather lookup is enabled."
+            "Required when collect_temperature_from_api is false; omit it when "
+            "weather lookup is enabled."
         ),
     )
     is_holiday: StrictBool = Field(
@@ -102,6 +101,7 @@ class ForecastRequest(BaseModel):
         if not isinstance(value, str) or not ISO_DATE_PATTERN.fullmatch(value):
             raise ValueError("forecast_date must use the exact YYYY-MM-DD format")
         return value
+
     collect_temperature_from_api: StrictBool = Field(
         default=False,
         description=(
@@ -126,7 +126,7 @@ class ForecastRequest(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_conditional_fields(self) -> "ForecastRequest":
+    def validate_conditional_fields(self) -> ForecastRequest:
         if self.is_holiday and self.holiday_name is None:
             raise ValueError("holiday_name is required when is_holiday is true")
         if not self.is_holiday and self.holiday_name is not None:
@@ -237,7 +237,7 @@ class ForecastResponse(BaseModel):
     generated_at: datetime
 
     @model_validator(mode="after")
-    def validate_prediction_count(self) -> "ForecastResponse":
+    def validate_prediction_count(self) -> ForecastResponse:
         if self.model_count != len(self.predictions):
             raise ValueError("model_count must equal the number of predictions")
         return self
@@ -265,14 +265,12 @@ class ForecastDayInput(BaseModel):
     @field_validator("daily_temperature_c", mode="before")
     @classmethod
     def reject_non_numeric_temperature(cls, value):
-        if value is not None and (
-            isinstance(value, bool) or not isinstance(value, (int, float))
-        ):
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))):
             raise ValueError("daily_temperature_c must be a JSON number")
         return value
 
     @model_validator(mode="after")
-    def validate_holiday(self) -> "ForecastDayInput":
+    def validate_holiday(self) -> ForecastDayInput:
         if self.is_holiday and self.holiday_name is None:
             raise ValueError("holiday_name is required when is_holiday is true")
         if not self.is_holiday and self.holiday_name is not None:
@@ -321,11 +319,11 @@ class SevenDayForecastRequest(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_horizon(self) -> "SevenDayForecastRequest":
+    def validate_horizon(self) -> SevenDayForecastRequest:
         dates = [item.forecast_date for item in self.days]
         if any(
             current != previous + timedelta(days=1)
-            for previous, current in zip(dates, dates[1:])
+            for previous, current in zip(dates, dates[1:], strict=False)
         ):
             raise ValueError("days must contain seven consecutive forecast dates")
         if self.collect_temperature_from_api:
@@ -334,9 +332,7 @@ class SevenDayForecastRequest(BaseModel):
                     "daily_temperature_c must be omitted when weather lookup is enabled"
                 )
         elif any(item.daily_temperature_c is None for item in self.days):
-            raise ValueError(
-                "daily_temperature_c is required for every day in manual mode"
-            )
+            raise ValueError("daily_temperature_c is required for every day in manual mode")
         return self
 
 

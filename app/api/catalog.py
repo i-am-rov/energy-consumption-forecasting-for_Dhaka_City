@@ -7,13 +7,9 @@ import re
 from enum import StrEnum
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FEATURE_DATA_PATH = (
-    PROJECT_ROOT
-    / "data"
-    / "historical"
-    / "energy_consumption_feature_engineered.csv"
+    PROJECT_ROOT / "data" / "historical" / "energy_consumption_feature_engineered.csv"
 )
 MODEL_TRAINING_SPLITS = frozenset({"train", "validation"})
 

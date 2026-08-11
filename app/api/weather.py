@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from .schemas import OpenMeteoPayload, TemperatureInfo
 
-
 # The forecast endpoint and location are based on the URL supplied for this API.
 OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -154,9 +153,7 @@ async def get_dhaka_daily_temperatures(
     try:
         results: list[TemperatureInfo] = []
         for segment in _weather_segments(start_date, end_date, get_dhaka_today()):
-            results.extend(
-                await _fetch_temperature_segment(*segment, client=active_client)
-            )
+            results.extend(await _fetch_temperature_segment(*segment, client=active_client))
     finally:
         if owns_client:
             await active_client.aclose()

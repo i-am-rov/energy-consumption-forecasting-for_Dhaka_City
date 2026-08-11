@@ -26,7 +26,6 @@ from .schemas import (
 from .service import ForecastService, ModelPredictionError
 from .weather import WeatherServiceError
 
-
 STATIC_DIRECTORY = Path(__file__).resolve().parent / "static"
 STATIC_INDEX = STATIC_DIRECTORY / "index.html"
 _service = ForecastService()
@@ -65,9 +64,7 @@ def _json_error(
     message: str,
     details: list[ValidationIssue] | None = None,
 ) -> JSONResponse:
-    payload = ErrorResponse(
-        error=ApiError(code=code, message=message, details=details or [])
-    )
+    payload = ErrorResponse(error=ApiError(code=code, message=message, details=details or []))
     return JSONResponse(status_code=http_status, content=payload.model_dump(mode="json"))
 
 

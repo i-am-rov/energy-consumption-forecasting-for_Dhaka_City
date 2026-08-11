@@ -10,7 +10,7 @@ from app.api.model_registry import MODEL_REGISTRY, ModelId, model_definitions
 
 def test_catalog_exposes_sorted_holidays_and_temperature_bounds() -> None:
     assert HOLIDAY_NAMES
-    assert HOLIDAY_NAMES == tuple(sorted(HOLIDAY_NAMES))
+    assert tuple(sorted(HOLIDAY_NAMES)) == HOLIDAY_NAMES
     assert "Not a Holiday" not in HOLIDAY_NAMES
     assert 15 < TEMPERATURE_MIN_C < TEMPERATURE_MAX_C < 45
 

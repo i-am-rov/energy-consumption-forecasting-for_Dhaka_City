@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timedelta, timezone
+from collections.abc import Callable
+from datetime import UTC, date, datetime, timedelta
 from functools import lru_cache
-from typing import Callable
 
 import joblib
 import numpy as np
@@ -32,8 +32,8 @@ from .schemas import (
     SevenDayForecastDay,
     SevenDayForecastRequest,
     SevenDayForecastResponse,
-    TemperatureInfo,
     TemperatureConstraints,
+    TemperatureInfo,
     WeatherHorizonDay,
     WeatherHorizonResponse,
 )
@@ -190,7 +190,7 @@ class ForecastService:
             temperature=temperature,
             predictions=predictions,
             model_count=len(predictions),
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
 
     async def forecast_horizon(
@@ -243,7 +243,7 @@ class ForecastService:
 
         visible_inputs = {item.forecast_date: item for item in request.days}
         contexts = []
-        for forecast_date, temperature in zip(recursive_dates, all_temperatures):
+        for forecast_date, temperature in zip(recursive_dates, all_temperatures, strict=False):
             item = visible_inputs.get(forecast_date)
             if item is None:
                 holiday_name = KNOWN_FUTURE_HOLIDAYS.get(forecast_date)
@@ -268,15 +268,13 @@ class ForecastService:
         selected = self._selected_definitions(request.model)
         response_days: list[SevenDayForecastDay] = []
 
-        for forecast_date, temperature in zip(recursive_dates, all_temperatures):
+        for forecast_date, temperature in zip(recursive_dates, all_temperatures, strict=False):
             feature_row = self.repository.build_recursive_feature_row(
                 frame,
                 forecast_date,
             )
             predictions = await asyncio.to_thread(
-                lambda row=feature_row: [
-                    self._predict(definition, row) for definition in selected
-                ]
+                lambda row=feature_row: [self._predict(definition, row) for definition in selected]
             )
             recursive_value = float(
                 np.mean([prediction.forecast_demand_mw for prediction in predictions])
@@ -305,7 +303,7 @@ class ForecastService:
             end_date=visible_end,
             days=response_days,
             model_count=len(selected),
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
 
     @staticmethod
