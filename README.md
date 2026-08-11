@@ -103,3 +103,7 @@ The verification command checks lint rules, formatting, the complete test suite,
 ## Responsible use
 
 Forecasts are decision-support estimates, not guarantees. Operational decisions should also consider current grid conditions, data drift, unusual weather, infrastructure changes, and expert review.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, quality requirements, and the pull request checklist.
